@@ -1,0 +1,52 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm' version '1.5.30'
+}
+
+group = 'top.berthua'
+version = '0.2.0'
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'spigotmc-repo'
+        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+    }
+}
+
+dependencies {
+    compileOnly 'org.bukkit:bukkit:1.12-R0.1-SNAPSHOT'
+    implementation 'net.mamoe:mirai-core:2.11.1'
+    implementation 'com.alibaba:fastjson:2.0.7.graal'
+}
+
+def targetJavaVersion = 8
+java {
+    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+    if (JavaVersion.current() < javaVersion) {
+        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+        options.release = targetJavaVersion
+    }
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+    filesMatching('plugin.yml') {
+        expand props
+    }
+}
+jar{
+    from{
+        configurations.compile.collect{it.is.isDirectory() ? it:zipTree(it)}
+        configurations.runtime.collect(zipTree(it))
+    }
+}
