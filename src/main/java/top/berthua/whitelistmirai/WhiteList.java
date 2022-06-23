@@ -1,12 +1,16 @@
 package top.berthua.whitelistmirai;
 
 import com.alibaba.fastjson.JSONArray;
+import net.mamoe.mirai.Bot;
+import net.mamoe.mirai.BotFactory;
 import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.At;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.PlainText;
+import net.mamoe.mirai.utils.BotConfiguration;
 import org.bukkit.Bukkit;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -14,8 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WhiteList {
-    public static List<PlayerData> playerList = new ArrayList<>();
-    public static void onEnable() {
+    public List<PlayerData> playerList = new ArrayList<>();
+    public void onEnable(Bot bot) {
         File catalogue = new File("./WhiteListMirai/");
         File file = new File(catalogue, "players.json");
         String jsons;
@@ -28,8 +32,6 @@ public class WhiteList {
                     String txt = new String(fileContent);
                     jsons = new String(txt.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
                     playerList = JSONArray.parseArray(jsons,PlayerData.class);
-                    WhiteListMirai p = new WhiteListMirai();
-                    p.getLogger().info("å·²åŠ è½½"+playerList.size()+"æ¡ç©å®¶æ•°æ®");
                 } else {
                     file.createNewFile();
                     FileOutputStream os = new FileOutputStream(file);
@@ -52,52 +54,54 @@ public class WhiteList {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        GlobalEventChannel.INSTANCE.subscribeAlways(GroupMessageEvent.class, (event) -> {
+        bot.getEventChannel().subscribeAlways(GroupMessageEvent.class, (event) -> {
             MessageChain chain = event.getMessage();
             String content = chain.contentToString();
             String playerid;
             long QID = event.getSender().getId();
-            if (content.contains("#ç”³è¯·ç™½åå• ")) {
-                playerid = content.replace("#ç”³è¯·ç™½åå• ", "");
+            if (content.contains("#ÉêÇë°×Ãûµ¥ ")) {
+                playerid = content.replace("#ÉêÇë°×Ãûµ¥ ", "");
                 for(int t = 0; t < playerList.size(); t++){
                     if(playerList.get(t).getQID() == QID || playerList.get(t).getMinecraftID().equals(playerid)){
-                        event.getSubject().sendMessage(new At(event.getSender().getId()).plus(new PlainText("ä½ å·²ç»ç»‘å®šäº†å…¶ä»–MCIDæˆ–ä½ ç”³è¯·çš„MCIDå·²è¢«ç»‘å®šè¿‡ï¼")));
+                        event.getSubject().sendMessage(new At(event.getSender().getId()).plus(new PlainText("ÄãÒÑ¾­°ó¶¨ÁËÆäËûMCID»òÄãÉêÇëµÄMCIDÒÑ±»°ó¶¨¹ı£¡")));
                         break;
                     }else if(t == playerList.size()-1){
                         PlayerData playerData = new PlayerData();
                         playerData.setQID(QID);
                         playerData.setMinecraftID(playerid);
                         writePlayer(playerData);
-                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"whitelist add " + playerid);
+                        WhiteListMirai.Command = "whitelist add "+ playerid;
+                        event.getSubject().sendMessage(new At(event.getSender().getId()).plus(new PlainText("³É¹¦Ìí¼ÓÍæ¼Ò°×Ãûµ¥¡±"+playerid+"¡°")));
                         break;
                     }
                 }
             }
-            if (content.startsWith("#æ³¨é”€ç™½åå• ")){
-                playerid = content.replace("#æ³¨é”€ç™½åå• ", "");
+            if (content.startsWith("#×¢Ïú°×Ãûµ¥ ")){
+                playerid = content.replace("#×¢Ïú°×Ãûµ¥ ", "");
                 PlayerData data = new PlayerData();
                 data.setQID(QID);
                 data.setMinecraftID(playerid);
                 if(playerList.contains(data)){
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(),"whitelist remove "+ playerid);
+                    WhiteListMirai.Command = "whitelist remove "+ playerid;
                     deletePlayer(data);
+                    event.getSubject().sendMessage(new At(event.getSender().getId()).plus(new PlainText("³É¹¦×¢Ïú£¡")));
                 }else{
-                    event.getSubject().sendMessage(new At(event.getSender().getId()).plus(new PlainText("ä½ æ²¡æœ‰ç»‘å®šMCIDæˆ–æäº¤çš„MCIDæœ‰è¯¯ï¼")));
+                    event.getSubject().sendMessage(new At(event.getSender().getId()).plus(new PlainText("ÄãÃ»ÓĞ°ó¶¨MCID»òÌá½»µÄMCIDÓĞÎó£¡")));
                 }
             }
-            if(content.equals("#æŸ¥è¯¢ç™½åå•")){
+            if(content.equals("#²éÑ¯°×Ãûµ¥")){
                 for(int t = 0;t < playerList.size();t++){
                     if(playerList.get(t).getQID() == QID){
-                        event.getSubject().sendMessage("QQå·ï¼š"+playerList.get(t).getQID()+"\nMCIDï¼š"+playerList.get(t).getMinecraftID());
+                        event.getSubject().sendMessage("QQºÅ£º"+playerList.get(t).getQID()+"\nMCID£º"+playerList.get(t).getMinecraftID());
                         break;
                     }else if(t == playerList.size()-1){
-                        event.getSubject().sendMessage("æ²¡æœ‰æŸ¥è¯¢åˆ°æ•°æ®");
+                        event.getSubject().sendMessage("Ã»ÓĞ²éÑ¯µ½Êı¾İ");
                     }
                 }
             }
         });
     }
-    public static void writePlayer(PlayerData x){
+    public void writePlayer(PlayerData x){
         File catalogue = new File("./WhiteListMirai/");
         File file = new File(catalogue, "players.json");
         try {
@@ -108,7 +112,7 @@ public class WhiteList {
             throw new RuntimeException(e);
         }
     }
-    public static void deletePlayer(PlayerData x){
+    public void deletePlayer(PlayerData x){
         File catalogue = new File("./WhiteListMirai/");
         File file = new File(catalogue, "players.json");
         try {
@@ -118,5 +122,13 @@ public class WhiteList {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+    public void login(long QQ,String password){
+        Bot bot = BotFactory.INSTANCE.newBot(QQ,password, new BotConfiguration() {{
+            // ÅäÖÃ£¬ÀıÈç£º
+            fileBasedDeviceInfo("./WhiteListMirai/device.json");
+        }});
+        bot.login();
+        onEnable(bot);
     }
 }

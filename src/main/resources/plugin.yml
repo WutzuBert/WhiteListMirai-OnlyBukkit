@@ -1,3 +1,9 @@
 name: WhiteListMirai
 version: '${version}'
 main: top.berthua.whitelistmirai.WhiteListMirai
+commands:
+  login:
+    description: Bot login command
+    usage: /login [QQ] [password]
+    permission: top.berthua.whitelistmirai.BotControlPermission
+    permission-message: 你无权对Bot进行任何操作!

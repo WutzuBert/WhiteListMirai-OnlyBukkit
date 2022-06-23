@@ -1,25 +1,26 @@
 package top.berthua.whitelistmirai;
 
-import net.mamoe.mirai.Bot;
-import net.mamoe.mirai.BotFactory;
-import net.mamoe.mirai.utils.BotConfiguration;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public final class WhiteListMirai extends JavaPlugin {
-
+    public static String Command = null;
     @Override
     public void onEnable() {
         // Plugin startup logic
-        getLogger().info("WhiteListMirai已加载!");
+        getLogger().info("WhiteListMirai�Ѽ���!");
         new BukkitRunnable(){
             @Override
-            public void run() {
-                WhiteList.onEnable();
+            public void run(){
+                if(Command != null){
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(),Command);
+                    Command = null;
+                }
             }
-        }.run();
+        }.runTaskTimer(this,0,1);
     }
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -28,11 +29,8 @@ public final class WhiteListMirai extends JavaPlugin {
                 new BukkitRunnable() {
                     @Override
                     public void run() {
-                        Bot bot = BotFactory.INSTANCE.newBot(Long.parseLong(args[0]), args[1], new BotConfiguration() {{
-                            // 配置，例如：
-                            fileBasedDeviceInfo("./WhiteListMirai/device.json");
-                        }});
-                        bot.login();
+                        WhiteList whiteList = new WhiteList();
+                        whiteList.login(Long.parseLong(args[0]), args[1]);
                     }
                 }.run();
             }catch (NumberFormatException e){
@@ -45,6 +43,6 @@ public final class WhiteListMirai extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
-        getLogger().info("WhiteListMirai已卸载！");
+        getLogger().info("WhiteListMirai��ж�أ�");
     }
 }
